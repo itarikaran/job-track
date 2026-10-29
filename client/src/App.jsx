@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api/jobs";
+﻿import { useEffect, useState } from "react";
+import { createJob, deleteJob as removeJob, getJobs, updateJob } from "./services/jobService";
 
 const emptyForm = {
   company: "",
@@ -32,10 +31,7 @@ export default function App() {
     setError("");
 
     try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error("Failed to load applications");
-
-      setJobs(await res.json());
+      setJobs(await getJobs());
     } catch (err) {
       setError(err.message || "Cannot connect to the server.");
     } finally {
@@ -57,17 +53,11 @@ export default function App() {
     setError("");
 
     try {
-      const res = await fetch(
-        editingId ? `${API}/${editingId}` : API,
-        {
-          method: editingId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Request failed");
+      if (editingId) {
+        await updateJob(editingId, form);
+      } else {
+        await createJob(form);
+      }
 
       setForm(emptyForm);
       setEditingId(null);
@@ -100,12 +90,7 @@ export default function App() {
     setError("");
 
     try {
-      const res = await fetch(`${API}/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Delete failed");
+      await removeJob(id);
 
       if (editingId === id) {
         setEditingId(null);
@@ -327,7 +312,7 @@ export default function App() {
                           {job.company}
                         </p>
                         <p className="mt-2 text-sm text-slate-500">
-                          {[job.location, job.jobType].filter(Boolean).join(" · ")}
+                          {[job.location, job.jobType].filter(Boolean).join(" | ")}
                         </p>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[job.status] || "bg-slate-100 text-slate-700"}`}>
@@ -385,3 +370,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
+

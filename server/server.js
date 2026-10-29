@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -6,8 +6,9 @@ const connectDB = require("./config/db");
 const jobRoutes = require("./routes/jobRoutes");
 
 const app = express();
-
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+}));
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -32,3 +33,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+
