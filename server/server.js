@@ -5,7 +5,10 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173"
+}));
+
 app.use(express.json());
 
 // MongoDB connection
@@ -15,8 +18,11 @@ mongoose
   .catch((err) => console.log(err));
 
 // Test API
-app.get("/", (req, res) => {
-  res.send("Job Track API is running");
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Client connected to Server successfully!"
+  });
 });
 
 const PORT = process.env.PORT || 5000;
