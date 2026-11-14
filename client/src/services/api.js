@@ -15,7 +15,8 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const isSessionCheck = error.config?.url?.replace(/\/+$/, "") === "/auth/me";
+    if (error.response && error.response.status === 401 && !isSessionCheck) {
       // Dispatch a custom event so AuthContext can listen and logout
       window.dispatchEvent(new Event("auth:unauthorized"));
     }
