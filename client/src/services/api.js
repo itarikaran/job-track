@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const configuredApiOrigin = import.meta.env.VITE_API_URL;
+const apiOrigin = (
+  configuredApiOrigin ||
+  (import.meta.env.PROD ? "https://job-track-z7e5.onrender.com" : "")
+).replace(/\/+$/, "");
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: apiOrigin ? `${apiOrigin}/api` : "/api",
   withCredentials: true, // Required for HttpOnly cookie authentication
 });
 

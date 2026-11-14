@@ -1,4 +1,5 @@
 const AppError = require("../utils/AppError");
+const allowedOrigins = require("../config/allowedOrigins");
 
 const unsafeMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -7,10 +8,6 @@ const csrfOrigin = (req, res, next) => {
     return next();
   }
 
-  const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
   const requestOrigin = req.get("origin");
   const referer = req.get("referer");
   let validOrigin = Boolean(requestOrigin) && allowedOrigins.includes(requestOrigin);

@@ -5,10 +5,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-for-jobtrack";
-process.env.FRONTEND_URL = "http://localhost:5173";
+process.env.FRONTEND_URL = "http://localhost:5173,http://localhost:5174,https://job-track-jt.vercel.app";
 
 const app = require("../app");
 const sendToken = require("../utils/sendToken");
+const { logout } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 const {
   createCompanySchema,
@@ -88,6 +89,30 @@ test("unsafe requests reject missing or foreign origins", async () => {
   assert.equal(foreignOrigin.status, 403);
 });
 
+test("production Vercel origin is allowed for credentialed API requests and CSRF checks", async () => {
+  const preflight = await fetch(`${baseUrl}/api/auth/login`, {
+    method: "OPTIONS",
+    headers: {
+      origin: "https://job-track-jt.vercel.app",
+      "access-control-request-method": "POST",
+      "access-control-request-headers": "content-type",
+    },
+  });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "https://job-track-jt.vercel.app");
+  assert.equal(preflight.headers.get("access-control-allow-credentials"), "true");
+
+  const csrfCheckedRequest = await fetch(`${baseUrl}/api/auth/login`, {
+    method: "POST",
+    headers: {
+      origin: "https://job-track-jt.vercel.app",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({}),
+  });
+  assert.notEqual(csrfCheckedRequest.status, 403);
+});
+
 test("invalid JWT is rejected by authentication middleware", async () => {
   const response = await fetch(`${baseUrl}/api/dashboard/stats`, {
     headers: { cookie: "token=not-a-valid-jwt" },
@@ -128,7 +153,7 @@ test("company districts and application sources use the approved options", () =>
   }).success, true);
 });
 
-test("JWT cookie is HttpOnly, SameSite lax, and duration-aware", () => {
+test("JWT cookies use secure cross-site settings in production and local settings in development", () => {
   process.env.JWT_EXPIRES_IN = "12h";
   let cookie;
   const response = {
@@ -140,19 +165,54 @@ test("JWT cookie is HttpOnly, SameSite lax, and duration-aware", () => {
     },
     json() {},
   };
-  sendToken(
-    { _id: "507f1f77bcf86cd799439011", email: "test@example.com", role: "user" },
-    200,
-    response
-  );
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  sendToken({ _id: "507f1f77bcf86cd799439011", email: "test@example.com", role: "user" }, 200, response);
   assert.equal(cookie.name, "token");
   assert.equal(cookie.options.httpOnly, true);
-  assert.equal(cookie.options.sameSite, "lax");
+  assert.equal(cookie.options.secure, true);
+  assert.equal(cookie.options.sameSite, "none");
   assert.equal(cookie.options.maxAge, 12 * 60 * 60 * 1000);
   assert.equal(
     jwt.verify(cookie.value, process.env.JWT_SECRET, { algorithms: ["HS256"] }).email,
     "test@example.com"
   );
+
+  process.env.NODE_ENV = "development";
+  sendToken({ _id: "507f1f77bcf86cd799439011", email: "test@example.com", role: "user" }, 200, response);
+  assert.equal(cookie.options.secure, false);
+  assert.equal(cookie.options.sameSite, "lax");
+  if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = previousNodeEnv;
+});
+
+test("logout clears the session cookie with matching production attributes", async () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  let clearedCookie;
+  const response = {
+    cookie(name, value, options) {
+      clearedCookie = { name, value, options };
+      return this;
+    },
+    status() {
+      return this;
+    },
+    json() {},
+  };
+
+  try {
+    await logout({}, response, (error) => { throw error; });
+    assert.equal(clearedCookie.name, "token");
+    assert.equal(clearedCookie.value, "");
+    assert.equal(clearedCookie.options.httpOnly, true);
+    assert.equal(clearedCookie.options.secure, true);
+    assert.equal(clearedCookie.options.sameSite, "none");
+    assert.equal(clearedCookie.options.path, "/");
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+  }
 });
 
 test("protect rejects tokens signed with an unsupported algorithm", async () => {

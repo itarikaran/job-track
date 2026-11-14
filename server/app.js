@@ -11,12 +11,9 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const csrfOrigin = require("./middleware/csrfMiddleware");
 const errorMiddleware = require("./middleware/errorMiddleware");
 const AppError = require("./utils/AppError");
+const allowedOrigins = require("./config/allowedOrigins");
 
 const app = express();
-const frontendOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
 
 app.disable("x-powered-by");
 app.use(helmet());
@@ -25,7 +22,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || frontendOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new AppError("Origin is not allowed", 403));
