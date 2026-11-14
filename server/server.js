@@ -1,29 +1,14 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
 
-const app = express();
+const connectDB = require("./config/db");
+const app = require("./app");
 
-app.use(cors({
-  origin: "http://localhost:5173"
-}));
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET must be configured before starting the server");
+}
 
-app.use(express.json());
-
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
-
-// Test API
-app.get("/api/test", (req, res) => {
-  res.json({
-    success: true,
-    message: "Client connected to Server successfully!"
-  });
-});
+// Connect to MongoDB
+connectDB();
 
 const PORT = process.env.PORT || 5000;
 
