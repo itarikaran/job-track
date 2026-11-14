@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { z } from "zod";
 
@@ -173,9 +173,9 @@ export default function Register() {
 
         <p className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <a href="/login" className="text-indigo-600 hover:text-indigo-500 font-medium">
+          <Link to="/login" className="text-indigo-600 hover:text-indigo-500 font-medium">
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>
