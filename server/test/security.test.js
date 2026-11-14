@@ -10,6 +10,8 @@ process.env.FRONTEND_URL = "http://localhost:5173,http://localhost:5174,https://
 const app = require("../app");
 const sendToken = require("../utils/sendToken");
 const { logout } = require("../controllers/authController");
+const authController = require("../controllers/authController");
+const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
 const {
   createCompanySchema,
@@ -118,6 +120,36 @@ test("invalid JWT is rejected by authentication middleware", async () => {
     headers: { cookie: "token=not-a-valid-jwt" },
   });
   assert.equal(response.status, 401);
+});
+
+test("login distinguishes missing-user and password-mismatch diagnostics without logging credentials", async () => {
+  const originalFindOne = User.findOne;
+  const originalWarn = console.warn;
+  const events = [];
+  const captured = [];
+  console.warn = (...args) => captured.push(args);
+
+  try {
+    User.findOne = () => ({ select: async () => null });
+    await authController.login({ body: { email: "person@example.com", password: "not-logged" } }, {}, (err) => events.push(err));
+    assert.equal(events.at(-1).statusCode, 401);
+
+    const hash = await bcrypt.hash("correct-password", 4);
+    User.findOne = () => ({ select: async () => ({ comparePassword: async (candidate) => bcrypt.compare(candidate, hash) }) });
+    await authController.login({ body: { email: "person@example.com", password: "wrong-password" } }, {}, (err) => events.push(err));
+    assert.equal(events.at(-1).statusCode, 401);
+
+    assert.deepEqual(captured.map(([message, details]) => [message, details.reason]), [
+      ["Authentication login rejected", "user_not_found"],
+      ["Authentication login rejected", "password_mismatch"],
+    ]);
+    assert.equal(JSON.stringify(captured).includes("person@example.com"), false);
+    assert.equal(JSON.stringify(captured).includes("wrong-password"), false);
+    assert.equal(JSON.stringify(captured).includes(hash), false);
+  } finally {
+    User.findOne = originalFindOne;
+    console.warn = originalWarn;
+  }
 });
 
 test("request schemas remove system fields and reject invalid references", () => {

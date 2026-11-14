@@ -32,12 +32,14 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
+      console.warn("Authentication login rejected", { reason: "user_not_found" });
       return next(new AppError("Invalid email or password", 401));
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      console.warn("Authentication login rejected", { reason: "password_mismatch" });
       return next(new AppError("Invalid email or password", 401));
     }
 
