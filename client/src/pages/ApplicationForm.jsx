@@ -5,7 +5,7 @@ import { companyService } from "../services/companyService";
 
 const statuses = ["Interested", "Applied", "Assessment", "Shortlisted", "Interview Scheduled", "Interview Completed", "Selected", "Rejected", "Offer Received", "Offer Accepted", "Offer Declined", "Withdrawn"];
 const jobTypes = ["Full-time", "Internship", "Contract", "Part-time", "Freelance"];
-const sources = ["LinkedIn", "Company Website", "Referral", "Indeed", "Other"];
+const sources = ["Company Website", "Naukri", "LinkedIn", "Indeed", "Referral", "Other"];
 const modes = ["Online", "In-person", "Phone"];
 const blank = { companyId: "", jobRole: "", jobDescription: "", jobType: "Full-time", appliedDate: new Date().toISOString().slice(0, 10), applicationSource: "Other", salary: "", interviewDate: "", interviewMode: "", interviewLocation: "", notes: "" };
 const input = "w-full rounded border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500";

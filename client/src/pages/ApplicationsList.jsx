@@ -4,6 +4,7 @@ import { applicationService } from "../services/applicationService";
 import { companyService } from "../services/companyService";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Toast } from "../components/ui/Toast";
+import { districts } from "../constants/districts";
 
 const STATUSES = ["Interested", "Applied", "Assessment", "Shortlisted", "Interview Scheduled", "Interview Completed", "Selected", "Rejected", "Offer Received", "Offer Accepted", "Offer Declined", "Withdrawn"];
 const JOB_TYPES = ["Full-time", "Internship", "Contract", "Part-time", "Freelance"];
@@ -82,7 +83,7 @@ export default function ApplicationsList() {
         {error && <div className="mb-6 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
         <div className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-5 md:grid-cols-4">
           <input value={filters.search} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search company or role..." className="rounded border border-slate-300 px-3 py-2" />
-          <input value={filters.district} onChange={(e) => updateFilter("district", e.target.value)} placeholder="District..." className="rounded border border-slate-300 px-3 py-2" />
+          <select value={filters.district} onChange={(e) => updateFilter("district", e.target.value)} className="rounded border border-slate-300 bg-white px-3 py-2"><option value="">All districts</option>{districts.map((district) => <option key={district}>{district}</option>)}</select>
           <select value={filters.companyId} onChange={(e) => updateFilter("companyId", e.target.value)} className="rounded border border-slate-300 bg-white px-3 py-2"><option value="">All companies</option>{companies.map((company) => <option key={company._id} value={company._id}>{company.name}</option>)}</select>
           <select value={filters.status} onChange={(e) => updateFilter("status", e.target.value)} className="rounded border border-slate-300 bg-white px-3 py-2"><option value="">All statuses</option>{STATUSES.map((status) => <option key={status}>{status}</option>)}</select>
           <select value={filters.jobType} onChange={(e) => updateFilter("jobType", e.target.value)} className="rounded border border-slate-300 bg-white px-3 py-2"><option value="">All job types</option>{JOB_TYPES.map((type) => <option key={type}>{type}</option>)}</select>

@@ -69,7 +69,10 @@ exports.getApplications = async (req, res, next) => {
     if (search) {
       const matchingCompanies = await Company.find({
         userId: req.user._id,
-        name: { $regex: escapeRegex(search), $options: "i" },
+        $or: [
+          { name: { $regex: escapeRegex(search), $options: "i" } },
+          { district: { $regex: escapeRegex(search), $options: "i" } },
+        ],
       }).distinct("_id");
       filter.$or = [
         { jobRole: { $regex: escapeRegex(search), $options: "i" } },

@@ -20,18 +20,18 @@ import Dashboard from "./pages/Dashboard";
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <SessionLoading />;
 
   return user ? children : <Navigate to="/login" replace />;
 };
 
-// Public route wrapper (redirects to dashboard if authenticated)
+// Public pages remain available with or without an existing session.
 const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <SessionLoading />;
 
-  return user ? <Navigate to="/dashboard" replace /> : children;
+  return children;
 };
 
 function App() {
@@ -128,11 +128,22 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
       </AuthProvider>
     </Router>
+  );
+}
+
+function SessionLoading() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-50" role="status" aria-live="polite">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+        <p className="text-slate-600">Checking your session...</p>
+      </div>
+    </main>
   );
 }
 

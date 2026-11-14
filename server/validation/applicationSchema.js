@@ -1,4 +1,5 @@
 const z = require("zod");
+const districts = require("../constants/districts");
 
 const statuses = [
   "Interested",
@@ -15,7 +16,7 @@ const statuses = [
   "Withdrawn",
 ];
 const jobTypes = ["Full-time", "Internship", "Contract", "Part-time", "Freelance"];
-const sources = ["LinkedIn", "Company Website", "Referral", "Indeed", "Other"];
+const sources = ["Company Website", "Naukri", "LinkedIn", "Indeed", "Referral", "Other"];
 const interviewModes = ["Online", "In-person", "Phone"];
 const id = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ID");
 const optionalText = (max) => z.string().trim().max(max).optional().or(z.literal(""));
@@ -66,7 +67,7 @@ const applicationQuerySchema = z.object({
     sort: z.enum(["jobRole", "appliedDate", "status", "createdAt", "updatedAt"]).optional(),
     order: z.enum(["asc", "desc"]).optional(),
     search: z.string().trim().optional(),
-    district: z.string().trim().optional(),
+    district: z.enum(districts).optional(),
     companyId: id.optional(),
     status: z.enum(statuses).optional(),
     jobType: z.enum(jobTypes).optional(),

@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 const test = require("node:test");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-for-jobtrack";
 process.env.FRONTEND_URL = "http://localhost:5173";
@@ -33,6 +34,41 @@ test("protected dashboard endpoint rejects missing authentication", async () => 
   assert.equal(response.status, 401);
 });
 
+test("session endpoint rejects unauthenticated requests", async () => {
+  const response = await fetch(`${baseUrl}/api/auth/me`);
+  assert.equal(response.status, 401);
+});
+
+test("session endpoint returns the user for a valid HttpOnly session cookie", async () => {
+  const originalFindById = User.findById;
+  User.findById = async (id) => ({
+    _id: id,
+    name: "Session User",
+    email: "session@example.com",
+    role: "user",
+  });
+
+  try {
+    const token = jwt.sign(
+      { id: "507f1f77bcf86cd799439011", email: "session@example.com", role: "user" },
+      process.env.JWT_SECRET,
+      { algorithm: "HS256", expiresIn: "1h" }
+    );
+    const response = await fetch(`${baseUrl}/api/auth/me`, {
+      headers: { cookie: `token=${token}` },
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).user, {
+      _id: "507f1f77bcf86cd799439011",
+      name: "Session User",
+      email: "session@example.com",
+      role: "user",
+    });
+  } finally {
+    User.findById = originalFindById;
+  }
+});
+
 test("unsafe requests reject missing or foreign origins", async () => {
   const missingOrigin = await fetch(`${baseUrl}/api/auth/login`, {
     method: "POST",
@@ -61,7 +97,7 @@ test("invalid JWT is rejected by authentication middleware", async () => {
 
 test("request schemas remove system fields and reject invalid references", () => {
   const company = createCompanySchema.parse({
-    body: { name: "Acme", district: "Colombo", userId: "attacker" },
+    body: { name: "Acme", district: "Chennai", userId: "attacker" },
   });
   assert.equal(company.body.userId, undefined);
 
@@ -76,7 +112,23 @@ test("request schemas remove system fields and reject invalid references", () =>
   assert.equal(application.success, false);
 });
 
-test("JWT cookie is HttpOnly, SameSite strict, and duration-aware", () => {
+test("company districts and application sources use the approved options", () => {
+  const districts = require("../constants/districts");
+  assert.equal(districts.length, 38);
+  assert.equal(new Set(districts).size, 38);
+  assert.equal(createCompanySchema.safeParse({ body: { name: "Acme", district: "Chennai" } }).success, true);
+  assert.equal(createCompanySchema.safeParse({ body: { name: "Acme", district: "Colombo" } }).success, false);
+  assert.equal(createApplicationSchema.safeParse({
+    body: {
+      companyId: "507f1f77bcf86cd799439011",
+      jobRole: "Engineer",
+      appliedDate: "2026-11-14",
+      applicationSource: "Naukri",
+    },
+  }).success, true);
+});
+
+test("JWT cookie is HttpOnly, SameSite lax, and duration-aware", () => {
   process.env.JWT_EXPIRES_IN = "12h";
   let cookie;
   const response = {
@@ -95,7 +147,7 @@ test("JWT cookie is HttpOnly, SameSite strict, and duration-aware", () => {
   );
   assert.equal(cookie.name, "token");
   assert.equal(cookie.options.httpOnly, true);
-  assert.equal(cookie.options.sameSite, "strict");
+  assert.equal(cookie.options.sameSite, "lax");
   assert.equal(cookie.options.maxAge, 12 * 60 * 60 * 1000);
   assert.equal(
     jwt.verify(cookie.value, process.env.JWT_SECRET, { algorithms: ["HS256"] }).email,

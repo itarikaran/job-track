@@ -94,7 +94,7 @@ const applicationSchema = new mongoose.Schema(
     },
     applicationSource: {
       type: String,
-      enum: ["LinkedIn", "Company Website", "Referral", "Indeed", "Other"],
+      enum: ["Company Website", "Naukri", "LinkedIn", "Indeed", "Referral", "Other"],
       default: "Other",
     },
     salary: {

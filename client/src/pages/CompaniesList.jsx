@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { companyService } from "../services/companyService";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Toast } from "../components/ui/Toast";
+import { districts } from "../constants/districts";
 
 const COMPANY_TYPES = [
   "Product",
@@ -174,13 +175,9 @@ export default function CompaniesList() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
               >
                 <option value="">All Districts</option>
-                <option value="Colombo">Colombo</option>
-                <option value="Gampaha">Gampaha</option>
-                <option value="Kalutara">Kalutara</option>
-                <option value="Kandy">Kandy</option>
-                <option value="Galle">Galle</option>
-                <option value="Jaffna">Jaffna</option>
-                <option value="Other">Other</option>
+                {districts.map((district) => (
+                  <option key={district} value={district}>{district}</option>
+                ))}
               </select>
             </div>
             <div className="flex-1 min-w-[200px]">

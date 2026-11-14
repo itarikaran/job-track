@@ -1,4 +1,5 @@
 const z = require("zod");
+const districts = require("../constants/districts");
 
 const companyTypeEnum = z.enum([
   "Product",
@@ -13,7 +14,7 @@ const companyTypeEnum = z.enum([
 const createCompanySchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "Company name is required").max(100, "Name too long"),
-    district: z.string().trim().min(1, "District is required").max(50, "District too long"),
+    district: z.enum(districts, { error: "Select a valid Tamil Nadu district" }),
     address: z.string().trim().max(200, "Address too long").optional().or(z.literal("")),
     additionalAddress: z.string().trim().max(200, "Additional address too long").optional().or(z.literal("")),
     website: z.string().trim().max(100, "Website too long").optional().or(z.literal("")),
@@ -29,7 +30,7 @@ const createCompanySchema = z.object({
 const updateCompanySchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "Company name is required").max(100, "Name too long").optional(),
-    district: z.string().trim().min(1, "District is required").max(50, "District too long").optional(),
+    district: z.enum(districts, { error: "Select a valid Tamil Nadu district" }).optional(),
     address: z.string().trim().max(200, "Address too long").optional(),
     additionalAddress: z.string().trim().max(200, "Additional address too long").optional(),
     website: z.string().trim().max(100, "Website too long").optional(),
@@ -49,7 +50,7 @@ const companyQuerySchema = z.object({
     sort: z.enum(["name", "district", "companyType", "createdAt"]).optional(),
     order: z.enum(["asc", "desc"]).optional(),
     search: z.string().optional(),
-    district: z.string().optional(),
+    district: z.enum(districts).optional(),
     address: z.string().optional(),
     companyType: companyTypeEnum.optional(),
   }),

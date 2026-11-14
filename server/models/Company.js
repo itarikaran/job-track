@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const districts = require("../constants/districts");
 
 const companySchema = new mongoose.Schema(
   {
@@ -17,6 +18,7 @@ const companySchema = new mongoose.Schema(
     district: {
       type: String,
       required: [true, "District is required"],
+      enum: districts,
       trim: true,
       index: true,
       maxlength: 50,

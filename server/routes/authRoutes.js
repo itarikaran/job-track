@@ -7,7 +7,7 @@ const {
   getMe,
   updateProfile,
 } = require("../controllers/authController");
-const { protect, optionalProtect } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const validateMiddleware = require("../middleware/validateMiddleware");
 const {
   registerSchema,
@@ -42,7 +42,7 @@ router.post(
 
 // Private routes
 router.post("/logout", protect, logout);
-router.get("/me", optionalProtect, getMe);
+router.get("/me", protect, getMe);
 router.put(
   "/profile",
   protect,

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { z } from "zod";
+import { districts } from "../../constants/districts";
 
 const companyTypes = ["Product", "Service", "Consulting", "Startup", "MNC", "Other"];
-const districts = ["Colombo", "Gampaha", "Kalutara", "Kandy", "Galle", "Jaffna", "Other"];
 const initialValues = { name: "", district: "", address: "", additionalAddress: "", website: "", contactPerson: "", contactNumber: "", email: "", companyType: "Other", notes: "" };
 const companySchema = z.object({
   name: z.string().trim().min(1, "Company name is required").max(100),
-  district: z.string().trim().min(1, "District is required").max(50),
+  district: z.enum(districts, { error: "Select a valid Tamil Nadu district" }),
   address: z.string().trim().max(200), additionalAddress: z.string().trim().max(200), website: z.string().trim().max(100),
   contactPerson: z.string().trim().max(50), contactNumber: z.string().trim().max(20),
   email: z.string().trim().max(100).refine((value) => !value || z.email().safeParse(value).success, "Invalid email"),

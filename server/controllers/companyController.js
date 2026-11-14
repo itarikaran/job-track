@@ -59,6 +59,7 @@ const buildFilter = (userId, { search, district, address, companyType }) => {
   if (search) {
     filter.$or = [
       { name: { $regex: escapeRegex(search), $options: "i" } },
+      { district: { $regex: escapeRegex(search), $options: "i" } },
       { address: { $regex: escapeRegex(search), $options: "i" } },
       { additionalAddress: { $regex: escapeRegex(search), $options: "i" } },
     ];
